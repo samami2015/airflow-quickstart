@@ -25,7 +25,7 @@ dag = DAG(
 )
 
 # Snowflake query
-query1 = [
+query = [
     """SELECT CURRENT_VERSION();"""
 ]
 
@@ -42,9 +42,9 @@ def run_query_with_hook(**context):
 # Define tasks
 with dag:
     # Task to execute the query using SnowflakeOperator
-    query1_exec = SnowflakeOperator(
+    query_exec = SnowflakeOperator(
         task_id="snowflake_operator_task",
-        sql=query1,
+        sql=query,
         snowflake_conn_id="snowflake_conn_test",
     )
 
@@ -55,4 +55,4 @@ with dag:
     )
 
 # Define task dependencies
-query1_exec >> hook_query_task
+query_exec >> hook_query_task
