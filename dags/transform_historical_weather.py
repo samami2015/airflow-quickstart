@@ -37,6 +37,8 @@ def create_historical_weather_reporting_table(in_table: Table, hot_day_celsius: 
             END
         ) OVER(PARTITION BY city, YEAR(CAST(time AS DATE))) AS heat_days_per_year
         FROM {{ in_table }}
+        WHERE time IS NOT NULL
+        AND TRY_CAST(time AS DATE) IS NOT NULL
     """
 
 
