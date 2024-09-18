@@ -7,3 +7,4 @@ __pycache__
 DEBUG.py
 include/dwh
 include/dwh.wal
+include/global_variables/albourne_input_variables.py
