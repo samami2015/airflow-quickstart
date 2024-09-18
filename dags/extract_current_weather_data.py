@@ -27,6 +27,7 @@ from include.meterology_utils import (
 
 start_dataset = Dataset("start")
 
+
 # --- #
 # DAG #
 # --- #
@@ -39,7 +40,7 @@ start_dataset = Dataset("start")
     catchup=False,
     default_args=gv.default_args,
     description="DAG that retrieves weather information and saves it to a local JSON.",
-    tags=["part_1"],
+    tags=["part_1", "quick start"],
     # render Jinja templates as native objects (e.g. dictionary) instead of strings
     render_template_as_native_obj=True,
 )
@@ -74,7 +75,7 @@ def extract_current_weather_data():
 
     @task
     def turn_json_into_table(
-        duckdb_conn_id: str, current_weather_table_name: str, current_weather: list
+            duckdb_conn_id: str, current_weather_table_name: str, current_weather: list
     ):
         """
         Convert the JSON input with info about the current weather into a pandas

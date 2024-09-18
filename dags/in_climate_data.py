@@ -33,7 +33,7 @@ start_dataset = Dataset("start")
     catchup=False,
     default_args=gv.default_args,
     description="Loads historic climate data form local storage to DuckDB.",
-    tags=["part_1"],
+    tags=["part_1", "quick start"],
     # render Jinja templates as native objects (e.g. dictionary) instead of strings
     render_template_as_native_obj=True,
 )

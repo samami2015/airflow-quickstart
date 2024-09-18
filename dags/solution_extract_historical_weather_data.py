@@ -57,7 +57,7 @@ def turn_json_into_table(in_json):
     catchup=False,
     default_args=gv.default_args,
     description="DAG that retrieves weather information and saves it to a local JSON.",
-    tags=["part_2", "solution"],
+    tags=["part_2", "solution", "quick start"],
     # render Jinja templates as native objects (e.g. dictionary) instead of strings
     render_template_as_native_obj=True,
 )

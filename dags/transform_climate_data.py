@@ -52,7 +52,7 @@ def create_global_climate_reporting_table(
     catchup=False,
     default_args=gv.default_args,
     description="Runs a transformation on climate data in DuckDB.",
-    tags=["part_1"],
+    tags=["part_1", "quick start"],
 )
 def transform_climate_data():
 

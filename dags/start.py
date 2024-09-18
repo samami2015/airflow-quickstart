@@ -35,7 +35,7 @@ start_dataset = Dataset("start")
     catchup=False,
     default_args=gv.default_args,
     description="Run this DAG to start the pipeline!",
-    tags=["start", "setup"],
+    tags=["start", "setup", "quick start"],
 )
 def start():
 

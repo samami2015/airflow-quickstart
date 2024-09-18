@@ -61,7 +61,7 @@ def create_historical_weather_reporting_table(in_table: Table, hot_day_celsius: 
     catchup=False,
     default_args=gv.default_args,
     description="Runs transformations on climate and current weather data in DuckDB.",
-    tags=["part_2", "solution"],
+    tags=["part_2", "solution", "quick start"],
 )
 def solution_transform_historical_weather():
 
