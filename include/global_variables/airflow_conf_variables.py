@@ -17,6 +17,11 @@ CLIMATE_DATA_PATH = (
     f"{os.environ['AIRFLOW_HOME']}/include/climate_data/global_climate_data.csv"
 )
 
+# SQL files
+TEMPLATE_SQL_PATH = (
+    f"{os.environ['AIRFLOW_HOME']}/include/sql"
+)
+
 # Datasets
 DS_START = Dataset("start")
 
