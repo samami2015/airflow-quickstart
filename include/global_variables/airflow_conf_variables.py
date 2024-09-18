@@ -43,3 +43,9 @@ default_args = {
 
 # default coordinates
 default_coordinates = {"city": "No city provided", "lat": 0, "long": 0}
+
+# SnowFlake config
+CONN_ID_SNOWFLAKE = "snowflake_conn"
+
+# HTTP config
+CONN_ID_HTTP = "http_conn_albourne"

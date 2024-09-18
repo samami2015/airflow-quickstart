@@ -19,8 +19,9 @@ from include.global_variables import constants as c
 from include.global_variables import albourne_input_variables as av
 from include.global_variables import albourne_constants as ac
 from include.albourne_utils import (
+    use_http_connection,
     get_bearer_token,
-    get_all_funds
+    get_all_funds,
 )
 
 
@@ -42,11 +43,21 @@ from include.albourne_utils import (
 )
 def extract_albourne_all_funds():
     @task
-    def get_token(username, password):
-        _token = get_bearer_token(username, password)
+    def get_conn_info():
+        _conn_info = use_http_connection()
+        return _conn_info
+
+    conn_info = get_conn_info()
+
+    @task
+    def get_token(conn_info):
+        _username = conn_info["username"]
+        _password = conn_info["password"]
+        _token = get_bearer_token(_username, _password)
         return _token
 
-    token = get_token(av.USERNAME, av.PASSWORD)
+    # token = get_token(av.USERNAME, av.PASSWORD)
+    token = get_token(conn_info)
 
     @task
     def get_data(token):
@@ -107,7 +118,7 @@ def extract_albourne_all_funds():
         cursor.close()
 
     turn_json_into_table(
-        snowflake_db_conn_id=av.CONN_ID_SNOWFLAKE,
+        snowflake_db_conn_id=gv.CONN_ID_SNOWFLAKE,
         all_funds_table_name=ac.IN_ALL_FUNDS_TABLE_NAME,
         all_funds=all_funds_mask,
     )

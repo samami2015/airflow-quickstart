@@ -1,6 +1,28 @@
 import requests
 import pandas as pd
+from airflow.hooks.base import BaseHook
+
 from include.global_variables import albourne_input_variables as av
+from include.global_variables import airflow_conf_variables as gv
+
+
+def use_http_connection(**kwargs):
+    # Retrieve the connection object
+    connection = BaseHook.get_connection(gv.CONN_ID_HTTP)
+
+    # Extract the required attributes
+    username = connection.login
+    password = connection.password
+    base_url = connection.host
+
+    # Use these attributes in your code
+    print(f"Username: {username}")
+    print(f"Password: {password}")
+    print(f"Base URL: {base_url}")
+
+    conn_info = {"username": username, "password": password, "base_url": base_url}
+    # Return these attributes as a list
+    return conn_info
 
 
 def get_bearer_token(username, password):
@@ -52,7 +74,6 @@ def get_all_funds(token):
             raise ValueError("No data found in the response")
     else:
         raise ValueError(f"Request failed with status code: {response.status_code}")
-
 
 # all_funds = get_all_funds(bearer_token)
 # print(all_funds)
