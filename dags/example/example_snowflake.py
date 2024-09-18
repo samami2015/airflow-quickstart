@@ -31,6 +31,12 @@ from airflow.providers.snowflake.operators.snowflake import SnowflakeSqlApiOpera
 SNOWFLAKE_CONN_ID = "snowflake_conn_test"
 SNOWFLAKE_SAMPLE_TABLE = "sample_table"
 
+# -------------------- #
+# Local module imports #
+# -------------------- #
+
+from include.global_variables import airflow_conf_variables as gv
+
 # SQL commands
 CREATE_TABLE_SQL_STRING = (
     f"CREATE OR REPLACE TRANSIENT TABLE {SNOWFLAKE_SAMPLE_TABLE} (name VARCHAR(250), id INT);"
@@ -41,14 +47,14 @@ SQL_MULTIPLE_STMTS = "; ".join(SQL_LIST)
 ENV_ID = os.environ.get("SYSTEM_TESTS_ENV_ID")
 DAG_ID = "example_snowflake"
 
-
 with DAG(
-    DAG_ID,
-    start_date=datetime(2021, 1, 1),
-    default_args={"snowflake_conn_id": SNOWFLAKE_CONN_ID, "conn_id": SNOWFLAKE_CONN_ID},
-    tags=["example"],
-    schedule="@once",
-    catchup=False,
+        DAG_ID,
+        start_date=datetime(2021, 1, 1),
+        default_args={"snowflake_conn_id": SNOWFLAKE_CONN_ID, "conn_id": SNOWFLAKE_CONN_ID},
+        tags=["example"],
+        schedule="@once",
+        catchup=False,
+        template_searchpath=[gv.TEMPLATE_SQL_PATH]
 ) as dag:
     # [START howto_operator_snowflake]
     snowflake_op_sql_str = SQLExecuteQueryOperator(
@@ -69,8 +75,11 @@ with DAG(
         split_statements=True,
     )
 
+    print("<--------------------->" + gv.TEMPLATE_SQL_PATH)
+
     snowflake_op_template_file = SQLExecuteQueryOperator(
         task_id="snowflake_op_template_file",
+        # sql=f"{gv.TEMPLATE_SQL_PATH}",
         sql="example_snowflake_snowflake_op_template_file.sql",
     )
 
@@ -85,16 +94,15 @@ with DAG(
     # [END howto_snowflake_sql_api_operator]
 
     (
-        snowflake_op_sql_str
-        >> [
-            snowflake_op_with_params,
-            snowflake_op_sql_list,
-            snowflake_op_template_file,
-            snowflake_op_sql_multiple_stmts,
-            snowflake_sql_api_op_sql_multiple_stmt,
-        ]
+            snowflake_op_sql_str
+            >> [
+                snowflake_op_with_params,
+                snowflake_op_sql_list,
+                snowflake_op_template_file,
+                snowflake_op_sql_multiple_stmts,
+                snowflake_sql_api_op_sql_multiple_stmt,
+            ]
     )
-
 
 # from tests.system.utils import get_test_run  # noqa: E402
 #
