@@ -32,8 +32,7 @@ query = [
 # Python function to run using SnowflakeHook
 def run_query_with_hook(**context):
     dwh_hook = SnowflakeHook(
-        snowflake_conn_id="snowflake_conn_test",
-        extra_conn_params={"account": "ld43643.uae-north.azure"}
+        snowflake_conn_id="snowflake_conn",
     )
     result = dwh_hook.get_first("SELECT CURRENT_VERSION()")
     logging.info("Snowflake Version: %s", result[0])
@@ -45,7 +44,7 @@ with dag:
     query_exec = SnowflakeOperator(
         task_id="snowflake_operator_task",
         sql=query,
-        snowflake_conn_id="snowflake_conn_test",
+        snowflake_conn_id="snowflake_conn",
     )
 
     # Task to execute the query using SnowflakeHook in a Python function

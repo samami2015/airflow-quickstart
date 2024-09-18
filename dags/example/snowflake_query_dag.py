@@ -26,7 +26,7 @@ SELECT CURRENT_VERSION();
 run_query = SnowflakeOperator(
     task_id='run_query',
     sql=query,
-    snowflake_conn_id='snowflake_conn_test',
+    snowflake_conn_id='snowflake_conn',
     dag=dag,
 )
 

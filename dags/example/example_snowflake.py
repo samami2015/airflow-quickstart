@@ -28,7 +28,7 @@ from airflow import DAG
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.snowflake.operators.snowflake import SnowflakeSqlApiOperator
 
-SNOWFLAKE_CONN_ID = "snowflake_conn_test"
+SNOWFLAKE_CONN_ID = "snowflake_conn"
 SNOWFLAKE_SAMPLE_TABLE = "sample_table"
 
 # -------------------- #
