@@ -1,9 +1,9 @@
-import requests
 import pandas as pd
+import requests
 from airflow.hooks.base import BaseHook
 
-from include.global_variables import albourne_input_variables as av
 from include.global_variables import airflow_conf_variables as gv
+from include.global_variables import albourne_input_variables as av
 
 
 def use_http_connection(**kwargs):

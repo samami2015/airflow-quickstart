@@ -4,25 +4,21 @@
 # Package imports #
 # --------------- #
 
-from airflow import Dataset
+import pandas as pd
 from airflow.decorators import dag, task
 from pendulum import datetime
-import pandas as pd
 from snowflake.connector.pandas_tools import write_pandas
 
 # -------------------- #
 # Local module imports #
 # -------------------- #
-
-from include.global_variables import airflow_conf_variables as gv
-from include.global_variables import constants as c
-from include.global_variables import albourne_input_variables as av
-from include.global_variables import albourne_constants as ac
 from include.albourne_utils import (
     use_http_connection,
     get_bearer_token,
     get_all_funds,
 )
+from include.global_variables import airflow_conf_variables as gv
+from include.global_variables import albourne_constants as ac
 
 
 # --- #
