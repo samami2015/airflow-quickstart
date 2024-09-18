@@ -29,12 +29,13 @@ query = [
     """SELECT CURRENT_VERSION();"""
 ]
 
+
 # Python function to run using SnowflakeHook
 def run_query_with_hook(**context):
-    dwh_hook = SnowflakeHook(
+    snowflake_hook = SnowflakeHook(
         snowflake_conn_id="snowflake_conn",
     )
-    result = dwh_hook.get_first("SELECT CURRENT_VERSION()")
+    result = snowflake_hook.get_first("SELECT CURRENT_VERSION()")
     logging.info("Snowflake Version: %s", result[0])
 
 
@@ -48,10 +49,10 @@ with dag:
     )
 
     # Task to execute the query using SnowflakeHook in a Python function
-    hook_query_task = PythonOperator(
-        task_id="hook_query_task",
+    hook_exec = PythonOperator(
+        task_id="snowflake_hook_task",
         python_callable=run_query_with_hook,
     )
 
 # Define task dependencies
-query_exec >> hook_query_task
+query_exec >> hook_exec

@@ -24,8 +24,10 @@ import os
 from datetime import datetime
 
 from airflow import DAG
+from airflow.operators.python import PythonOperator
 from airflow.providers.http.operators.http import HttpOperator
 from airflow.providers.http.sensors.http import HttpSensor
+from airflow.providers.http.hooks.http import HttpHook
 
 ENV_ID = os.environ.get("SYSTEM_TESTS_ENV_ID")
 DAG_ID = "example_http_operator"
@@ -40,7 +42,32 @@ dag = DAG(
     catchup=False,
 )
 
+def run_query_with_hook(**context):
+    http_hook = HttpHook(
+        http_conn_id="http_conn_albourne"
+    )
+    # Retrieve the connection object
+    conn = http_hook.get_connection(http_hook.http_conn_id)
+
+    # Extract the required connection details
+    conn_info = {
+        "username": conn.login,
+        "password": conn.password,
+        "host": conn.host,
+    }
+
+    return conn_info
+
 dag.doc_md = __doc__
+
+# _return = run_query_with_hook()
+# print(_return)
+
+# Task to execute the query using SnowflakeHook in a Python function
+hook_query_task = PythonOperator(
+    task_id="http_hook_task",
+    python_callable=run_query_with_hook,
+)
 
 # task_post_op, task_get_op and task_put_op are examples of tasks created by instantiating operators
 # [START howto_operator_http_task_post_op]
@@ -156,7 +183,7 @@ task_get_paginated = HttpOperator(
     >> task_get_op_response_filter
 )
 task_get_op_response_filter >> task_put_op >> task_del_op >> task_post_op_formenc
-task_post_op_formenc >> task_get_paginated
+task_post_op_formenc >> task_get_paginated >> hook_query_task
 
 # from tests.system.utils import get_test_run  # noqa: E402
 
