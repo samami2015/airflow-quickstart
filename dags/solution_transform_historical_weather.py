@@ -133,7 +133,6 @@ def solution_transform_historical_weather():
         cursor.sql(
             f"CREATE OR REPLACE TABLE {output_table_name} AS SELECT * FROM output_df"
         )
-        cursor.sql(f"INSERT INTO {output_table_name} SELECT * FROM output_df")
         cursor.close()
 
     find_hottest_day_birthyear(
