@@ -73,7 +73,7 @@ def extract_current_weather_data():
     # set dependencies to get current weather
     current_weather = get_current_weather(get_lat_long_for_city(city=uv.MY_CITY))
 
-    @task
+    @task(pool="duckdb")
     def turn_json_into_table(
             duckdb_conn_id: str, current_weather_table_name: str, current_weather: list
     ):

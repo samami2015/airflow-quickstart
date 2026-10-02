@@ -106,6 +106,8 @@ def get_hot_days(db=duck_db_instance_path):
     hot_days_data = cursor.execute(
         f"""SELECT * FROM {c.REPORT_HOT_DAYS_TABLE_NAME};"""
     ).fetchall()
+    cursor.close()
+
     df = pd.DataFrame(hot_days_data, columns=[x[0] for x in hot_days_col_names])
     return df
 
