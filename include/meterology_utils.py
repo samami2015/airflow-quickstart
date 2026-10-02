@@ -7,22 +7,25 @@ def get_lat_long_for_cityname(city: str):
     """Converts a string of a city name provided into
     lat/long coordinates."""
 
-    try:
-        r = requests.get(f"https://photon.komoot.io/api/?q={city}")
-        long = r.json()["features"][0]["geometry"]["coordinates"][0]
-        lat = r.json()["features"][0]["geometry"]["coordinates"][1]
+    # use the Open-Meteo geocoding API, the same provider as the weather data
+    r = requests.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": city, "count": 1},
+        timeout=30,
+    )
+    r.raise_for_status()
+    results = r.json().get("results")
 
-        # log the coordinates retrieved
-        gv.task_log.info(f"Coordinates for {city}: {lat}/{long}")
+    # fail the task (and let Airflow retry) instead of passing on invalid
+    # coordinates, which make the weather API calls return 400
+    if not results:
+        raise ValueError(f"Coordinates for {city} could not be retrieved.")
 
-    # if the coordinates cannot be retrieved log a warning
-    except (AttributeError, KeyError, ValueError) as err:
-        gv.task_log.warn(
-            f"""Coordinates for {city}: could not be retrieved.
-            Error: {err}"""
-        )
-        lat = "NA"
-        long = "NA"
+    lat = results[0]["latitude"]
+    long = results[0]["longitude"]
+
+    # log the coordinates retrieved
+    gv.task_log.info(f"Coordinates for {city}: {lat}/{long}")
 
     city_coordinates = {"city": city, "lat": lat, "long": long}
 

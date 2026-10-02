@@ -73,7 +73,7 @@ def extract_current_weather_data():
     # set dependencies to get current weather
     current_weather = get_current_weather(get_lat_long_for_city(city=uv.MY_CITY))
 
-    @task
+    @task(pool="duckdb")
     def turn_json_into_table(
             duckdb_conn_id: str, current_weather_table_name: str, current_weather: list
     ):
@@ -92,7 +92,7 @@ def extract_current_weather_data():
         duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
         cursor = duckdb_conn.cursor()
         cursor.sql(
-            f"CREATE TABLE IF NOT EXISTS {current_weather_table_name} AS SELECT * FROM current_weather_df"
+            f"CREATE TABLE IF NOT EXISTS {current_weather_table_name} AS SELECT * FROM current_weather_df LIMIT 0"
         )
         cursor.sql(
             f"INSERT INTO {current_weather_table_name} SELECT * FROM current_weather_df"

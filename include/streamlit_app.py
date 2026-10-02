@@ -2,6 +2,7 @@
 # PACKAGE IMPORTS #
 # --------------- #
 
+import os
 import streamlit as st
 import duckdb
 import pandas as pd
@@ -33,15 +34,25 @@ year_grain_col_name = "year_average_temp"
 # -------------- #
 
 
+def connect(db=duck_db_instance_path):
+    # open read-only: the Airflow tasks own the database file, and a read-write
+    # connect would create it here, owned by this container's root user, so
+    # Airflow could no longer write to it
+    return duckdb.connect(db, read_only=True)
+
+
 def list_currently_available_tables(db=duck_db_instance_path):
-    cursor = duckdb.connect(db)
+    # the database file only exists once the first DAG has written to it
+    if not os.path.exists(db):
+        return []
+    cursor = connect(db)
     tables = cursor.execute("SHOW TABLES;").fetchall()
     cursor.close()
     return [table[0] for table in tables]
 
 
 def get_current_weather_info_by_city(city, db=duck_db_instance_path):
-    cursor = duckdb.connect(db)
+    cursor = connect(db)
     row = cursor.execute(
         f"""SELECT lat, long, temperature, windspeed, winddirection, api_response
         FROM {c.IN_CURRENT_WEATHER_TABLE_NAME}
@@ -53,7 +64,7 @@ def get_current_weather_info_by_city(city, db=duck_db_instance_path):
 
 def get_global_surface_temp_data(db=duck_db_instance_path):
 
-    cursor = duckdb.connect(db)
+    cursor = connect(db)
 
     # get global surface temperature data
     global_surface_temp_data = cursor.execute(
@@ -76,7 +87,7 @@ def get_global_surface_temp_data(db=duck_db_instance_path):
 
 def get_historic_weather_info(db=duck_db_instance_path):
 
-    cursor = duckdb.connect(db)
+    cursor = connect(db)
     historical_weather_data = cursor.execute(
         f"""SELECT * FROM {c.REPORT_HISTORICAL_WEATHER_TABLE_NAME};"""
     ).fetchall()
@@ -97,7 +108,7 @@ def get_historic_weather_info(db=duck_db_instance_path):
 
 
 def get_hot_days(db=duck_db_instance_path):
-    cursor = duckdb.connect(db)
+    cursor = connect(db)
 
     hot_days_col_names = cursor.execute(
         f"""SELECT column_name from information_schema.columns where table_name = '{c.REPORT_HOT_DAYS_TABLE_NAME}';"""
@@ -106,6 +117,8 @@ def get_hot_days(db=duck_db_instance_path):
     hot_days_data = cursor.execute(
         f"""SELECT * FROM {c.REPORT_HOT_DAYS_TABLE_NAME};"""
     ).fetchall()
+    cursor.close()
+
     df = pd.DataFrame(hot_days_data, columns=[x[0] for x in hot_days_col_names])
     return df
 
