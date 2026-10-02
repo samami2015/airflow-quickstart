@@ -95,6 +95,7 @@ def solution_extract_historical_weather_data():
     historical_weather = get_historical_weather.expand(coordinates=coordinates)
 
     @task(
+        pool="duckdb",
         outlets=[Dataset("duckdb://include/dwh/historical_weather_data")],
     )
     def turn_json_into_table(
