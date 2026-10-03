@@ -9,9 +9,6 @@ from airflow.datasets import Dataset
 from pendulum import datetime
 import pandas as pd
 
-# import tools from the Astro SDK
-from astro import sql as aql
-
 # -------------------- #
 # Local module imports #
 # -------------------- #
@@ -26,16 +23,6 @@ from include.meterology_utils import (
 # --- #
 # DAG #
 # --- #
-
-
-@aql.dataframe(pool="duckdb")
-def turn_json_into_table(in_json):
-    """Converts the list of JSON input into one pandas dataframe."""
-    if type(in_json) == dict:
-        df = pd.DataFrame(in_json)
-    else:
-        df = pd.concat([pd.DataFrame(d) for d in in_json], ignore_index=True)
-    return df
 
 
 # ---------- #

@@ -7,7 +7,7 @@ This repository contains a simple Airflow pipeline following an ELT pattern that
 
 Your pipeline will accomplish this using six Airflow DAGs and the following tools:
 
-- The [Astro Python SDK](https://astro-sdk-python.readthedocs.io/en/stable/index.html) for ELT operations.
+- The [DuckDB Airflow provider](https://pypi.org/project/airflow-provider-duckdb/) to run SQL and load pandas DataFrames from Airflow tasks.
 - [DuckDB](https://duckdb.org/), a relational database, for storing tables of the ingested data as well as the resulting tables after transformations.
 - [Streamlit](https://streamlit.io/), a Python package for creating interactive apps, for displaying the data as a dashboard. The Streamlit app will retrieve its data from tables in DuckDB.
 
@@ -27,13 +27,13 @@ The ready to run Airflow pipeline consists of 4 DAGs and will:
 
 - Retrieve the current weather for your city from an API.
 - Ingest climate data from a local CSV file.
-- Load the data into DuckDB using the Astro SDK.
-- Run a transformation on the data using the Astro SDK to create a reporting table powering a Streamlit App.
+- Load the data into DuckDB.
+- Run a SQL transformation on the data in DuckDB to create a reporting table powering a Streamlit App.
 
 ## Part 2: Exercises
 
 Follow the [Part 2 Instructions](#part-2-instructions-exercises) to extend the pipeline to show historical weather data for cities of your choice in the Streamlit App.
-During this process you will learn about Airflow features like [Datasets](https://docs.astronomer.io/learn/airflow-datasets), [dynamic task mapping](https://docs.astronomer.io/learn/dynamic-tasks) and the [Astro Python SDK](https://docs.astronomer.io/learn/astro-python-sdk).
+During this process you will learn about Airflow features like [Datasets](https://docs.astronomer.io/learn/airflow-datasets), [dynamic task mapping](https://docs.astronomer.io/learn/dynamic-tasks) and transforming data with pandas inside a task.
 
 ## Part 3: Play with it!
 
@@ -120,7 +120,7 @@ Use Datasets to make:
 - `extract_historical_weather_data` run after the `start` DAG has finished
 - `transform_historical_weather_data` run after the `extract_historical_weather_data` DAG has finished
 
-You can find information about how to use the Datasets feature in [this guide](https://docs.astronomer.io/learn/airflow-datasets). See also the [documentation on how the Astro Python SDK interacts with Datasets](https://astro-sdk-python.readthedocs.io/en/stable/guides/concepts.html#datasets).
+You can find information about how to use the Datasets feature in [this guide](https://docs.astronomer.io/learn/airflow-datasets).
 
 After running the two DAGs in order, view your Streamlit app. You will now see a graph with hot days per year. Additionally, parts of the historical weather table will be printed out.
 
@@ -138,31 +138,30 @@ In your Streamlit app, you can now select the different cities from the dropdown
 
 ![Streamlit app](src/part_2_streamlit_dropdown.png)
 
-### Exercise 3 - Astro Python SDK
+### Exercise 3 - Transform data with pandas
 
-The Astro Python SDK is an open-source package built on top of Airflow to provide you with functions and classes that simplify common ELT and ETL operations such as loading files or using SQL or Pandas to transform data in a database-agnostic way. View the [Astro Python SDK documentation](https://astro-sdk-python.readthedocs.io/en/stable/index.html) for more information. 
-
-The `transform_historical_weather_data` uses the `aql.dataframe` decorator to use Pandas to transform data. The table returned by the `find_hottest_day_birthyear` task will be printed out at the end of your Streamlit app. By default, no transformation is made to the table in the task, so let's change that!
+The `transform_historical_weather` DAG contains a `find_hottest_day_birthyear` task that reads the historical weather data from DuckDB into a pandas DataFrame and saves the result to a new table. The table it saves will be printed out at the end of your Streamlit app. By default, no transformation is made to the table in the task, so let's change that!
 
 ```python
-@aql.dataframe(pool="duckdb")
-def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
-    # print ingested df to the logs
-    gv.task_log.info(in_table)
-
-    output_df = in_table
+@task(pool="duckdb")
+def find_hottest_day_birthyear(
+    duckdb_conn_id: str,
+    input_table_name: pd.DataFrame,
+    birthyear: int,
+    output_table_name: str,
+):
+    ...
+    input_df = cursor.sql(f"SELECT * FROM {input_table_name}").df()
 
     ####### YOUR TRANSFORMATION ##########
 
-    # print result table to the logs
-    gv.task_log.info(output_df)
-
-    return output_df
+    output_df = input_df
+    ...
 ```
 
-Use Pandas to transform the data shown in `in_table` to search for the hottest day in your birthyear for each city for which you retrieved data.
+Use Pandas to transform the data in `input_df` to search for the hottest day in your birthyear for each city for which you retrieved data.
 
-Tip: Both, the `in_table` dataframe and the `output_df` dataframe are printed to the logs of the `find_hottest_day_birthyear` task. The goal is to have an output as in the screenshot below. If your table does not contain information for several cities, make sure you completed exercise 2 correctly.
+Tip: Add `print(input_df)` and `print(output_df)` to see both dataframes in the logs of the `find_hottest_day_birthyear` task. The goal is to have an output as in the screenshot below. If your table does not contain information for several cities, make sure you completed exercise 2 correctly.
 
 ![Streamlit app](src/part_2_hottest_day_output.png)
 
