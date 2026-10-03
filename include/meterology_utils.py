@@ -24,8 +24,12 @@ def get_lat_long_for_cityname(city: str):
     lat = results[0]["latitude"]
     long = results[0]["longitude"]
 
-    # log the coordinates retrieved
-    gv.task_log.info(f"Coordinates for {city}: {lat}/{long}")
+    # log the coordinates retrieved and the place they belong to, so a wrong
+    # match (another place with the same name) is easy to spot
+    place = ", ".join(
+        results[0][key] for key in ["name", "admin1", "country"] if results[0].get(key)
+    )
+    gv.task_log.info(f"Coordinates for {city}: {lat}/{long} ({place})")
 
     city_coordinates = {"city": city, "lat": lat, "long": long}
 
@@ -73,10 +77,10 @@ def get_current_weather_from_city_coordinates(coordinates, timestamp):
             "city": city,
             "lat": lat,
             "long": long,
-            "temperature": "NULL",
-            "windspeed": "NULL",
-            "winddirection": "NULL",
-            "weathercode": "NULL",
+            "temperature": None,
+            "windspeed": None,
+            "winddirection": None,
+            "weathercode": None,
             "time": f"{timestamp}",
             "API_response": r.status_code,
         }
@@ -101,34 +105,23 @@ def get_historical_weather_from_city_coordinates(coordinates):
     city = coordinates["city"]
 
     r = requests.get(
-        f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={long}&start_date=1960-01-01&end_date=2023-01-01&daily=temperature_2m_max&timezone=auto"
+        f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={long}&start_date=1960-01-01&end_date=2023-01-01&daily=temperature_2m_max&timezone=auto",
+        timeout=120,
     )
 
-    # if the API call is successful log the current temp
-    if r.status_code == 200:
-        max_temp_per_day = pd.DataFrame(r.json()["daily"])
-        max_temp_per_day["city"] = city
-        max_temp_per_day["lat"] = lat
-        max_temp_per_day["long"] = long
-
-    else:
-
-        max_temp_per_day = pd.DataFrame(
-            {
-                "time": ["Null"],
-                "temperature_2m_max": ["Null"],
-                "city": [city],
-                "lat": [lat],
-                "long": [long],
-            }
+    # fail the task (and let Airflow retry it) if the API call is not successful,
+    # e.g. 429 when the API's rate limit is reached. The load task then does not
+    # run, so the historical weather table keeps its previous data instead of
+    # being replaced with empty rows.
+    if r.status_code != 200:
+        raise RuntimeError(
+            f"Could not retrieve historical temperature for {city} at {lat}/{long}: "
+            f"archive-api.open-meteo.com returned {r.status_code} {r.text[:200]}"
         )
 
-        gv.task_log.warn(
-            f"""
-                Could not retrieve historical temperature for {city} at
-                {lat}/{long} from https://api.open/meteo.com.
-                Request returned {r.status_code}.
-            """
-        )
+    max_temp_per_day = pd.DataFrame(r.json()["daily"])
+    max_temp_per_day["city"] = city
+    max_temp_per_day["lat"] = lat
+    max_temp_per_day["long"] = long
 
     return max_temp_per_day

@@ -70,8 +70,9 @@ def extract_current_weather_data():
 
         return city_weather_and_coordinates
 
-    # set dependencies to get current weather
-    current_weather = get_current_weather(get_lat_long_for_city(city=uv.MY_CITY))
+    # set dependencies to get current weather, mapping over all cities
+    coordinates = get_lat_long_for_city.expand(city=uv.MY_CITIES)
+    current_weather = get_current_weather.expand(coordinates=coordinates)
 
     @task(pool="duckdb")
     def turn_json_into_table(
@@ -83,11 +84,14 @@ def extract_current_weather_data():
         Args:
             duckdb_conn_id (str): The connection ID for the DuckDB connection.
             current_weather_table_name (str): The name of the table to be created in DuckDB.
-            current_weather (list): The JSON input to be loaded into DuckDB.
+            current_weather (list): The JSON input to be loaded into DuckDB, one
+                list of rows per city.
         """
         from duckdb_provider.hooks.duckdb_hook import DuckDBHook
 
-        current_weather_df = pd.DataFrame(current_weather)
+        current_weather_df = pd.DataFrame(
+            [row for city_rows in current_weather for row in city_rows]
+        )
 
         duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
         cursor = duckdb_conn.cursor()

@@ -15,7 +15,7 @@ import global_variables.constants as c
 # VARIABLES #
 # --------- #
 
-city_name = uv.MY_CITY
+city_names = uv.MY_CITIES
 user_name = uv.MY_NAME
 hot_day = uv.HOT_DAY
 
@@ -56,10 +56,12 @@ def get_current_weather_info_by_city(city, db=duck_db_instance_path):
     row = cursor.execute(
         f"""SELECT lat, long, temperature, windspeed, winddirection, api_response
         FROM {c.IN_CURRENT_WEATHER_TABLE_NAME}
-        WHERE city == '{city}' ORDER BY time DESC LIMIT 1;"""
+        WHERE city = ? ORDER BY time DESC LIMIT 1;""",
+        [city],
     ).fetchall()
     cursor.close()
-    return row[0]
+    # None if the pipeline has not retrieved weather for this city yet
+    return row[0] if row else None
 
 
 def get_global_surface_temp_data(db=duck_db_instance_path):
@@ -129,16 +131,6 @@ def get_hot_days(db=duck_db_instance_path):
 
 
 tables = list_currently_available_tables()
-
-if c.IN_CURRENT_WEATHER_TABLE_NAME in tables:
-    (
-        my_city_lat,
-        my_city_long,
-        my_city_current_temp,
-        my_city_current_windspeed,
-        my_city_current_winddirection,
-        my_city_api_response,
-    ) = get_current_weather_info_by_city(city_name)
 
 if c.REPORT_CLIMATE_TABLE_NAME in tables:
     global_temp_df = get_global_surface_temp_data()
@@ -252,34 +244,52 @@ else:
 # Current weather in main cities #
 # ------------------------------ #
 
-st.subheader(f"Current weather in {city_name}")
+st.subheader("Current weather")
 if c.IN_CURRENT_WEATHER_TABLE_NAME in tables:
-    if my_city_api_response == 200:
+    city_name = st.selectbox("City", city_names, key="current_weather_city")
+    current_weather = get_current_weather_info_by_city(city_name)
 
-        # create 3 columns for metrics
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Temperature [°C]", round(my_city_current_temp, 1))
-        col2.metric("Windspeed [km/h]", round(my_city_current_windspeed, 2))
-        col3.metric(
-            "Winddirection [° clockwise from north]", my_city_current_winddirection
-        )
-
-        # plot location of user-defined city
-        city_coordinates_df = pd.DataFrame(
-            [(my_city_lat, my_city_long)], columns=["lat", "lon"]
-        )
-
-        st.map(city_coordinates_df)
-
-    else:
+    if current_weather is None:
         st.markdown(
-            f"""Your call to the open weather API returned
-            {my_city_api_response}.
-            Try running the pipeline again with a different city!"""
+            f"""No weather data for {city_name} yet. Run the Airflow pipeline again
+            to retrieve it."""
         )
+    else:
+        (
+            my_city_lat,
+            my_city_long,
+            my_city_current_temp,
+            my_city_current_windspeed,
+            my_city_current_winddirection,
+            my_city_api_response,
+        ) = current_weather
+
+        if my_city_api_response == 200:
+
+            # create 3 columns for metrics
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Temperature [°C]", round(my_city_current_temp, 1))
+            col2.metric("Windspeed [km/h]", round(my_city_current_windspeed, 2))
+            col3.metric(
+                "Winddirection [° clockwise from north]", my_city_current_winddirection
+            )
+
+            # plot location of the selected city
+            city_coordinates_df = pd.DataFrame(
+                [(my_city_lat, my_city_long)], columns=["lat", "lon"]
+            )
+
+            st.map(city_coordinates_df)
+
+        else:
+            st.markdown(
+                f"""Your call to the open weather API for {city_name} returned
+                {my_city_api_response}.
+                Try running the pipeline again with a different city!"""
+            )
 else:
     st.markdown(
-        "Provide a city name in the 'user_input_variables.py' file and run part 1 of the Airflow pipeline to see the current weather in your city."
+        "Provide city names in the 'user_input_variables.py' file and run part 1 of the Airflow pipeline to see the current weather in your cities."
     )
 
 

@@ -82,7 +82,7 @@ Download the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) to ru
 
 All DAGs tagged with `part_1` are part of a pre-built, fully functional Airflow pipeline. To run them:
 
-1. Go to `include/global_variables/user_input_variables.py` and enter your own info for `MY_NAME` and `MY_CITY`.
+1. Go to `include/global_variables/user_input_variables.py` and enter your own info for `MY_NAME` and `MY_CITIES` (a list of one or more cities).
 2. Trigger the `start` DAG and unpause all DAGs that are tagged with `part_1` by clicking on the toggle on their lefthand side. Once the `start` DAG is unpaused, it will run once, starting the pipeline. You can also run this DAG manually to trigger further pipeline runs by clicking on the play button on the right side of the DAG.
 
     The DAGs that will run are:
@@ -215,7 +215,7 @@ This repository contains the following files and folders:
     - `global_variables`: configuration files.
         - `airflow_conf_variables.py`: file storing variables needed in several DAGs.
         - `constants.py`: file storing table names.
-        - `user_input_variables.py`: file with user input variables like `MY_NAME` and `MY_CITY`.
+        - `user_input_variables.py`: file with user input variables like `MY_NAME` and `MY_CITIES`.
     - `meterology_utils.py`: file containing functions performing calls to the Open Meteo API.
     - `streamlit_app.py`: file defining the streamlit app.
 

@@ -107,12 +107,18 @@ def solution_transform_historical_weather():
 
         df = input_df
 
+        # parse the dates (stored as text or as a date, depending on the load) and
+        # drop rows without a date or temperature
+        df = df.assign(time=pd.to_datetime(df["time"], errors="coerce")).dropna(
+            subset=["time", "temperature_2m_max"]
+        )
+
         # select the data from one year
-        try:
-            df_birthyear = df[df["time"].str.startswith(str(birthyear))]
-        except:
+        df_birthyear = df[df["time"].dt.year == birthyear]
+        if df_birthyear.empty:
             # if my birthyear is not available, use the year 2022
-            df_birthyear = df[df["time"].str.startswith(str("2022"))]
+            df_birthyear = df[df["time"].dt.year == 2022]
+        df_birthyear = df_birthyear.assign(time=df_birthyear["time"].dt.strftime("%Y-%m-%d"))
 
         # group the data by city, use an apply function to find the row with the highest temperature
         output_df = (
