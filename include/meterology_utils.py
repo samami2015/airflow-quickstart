@@ -24,8 +24,12 @@ def get_lat_long_for_cityname(city: str):
     lat = results[0]["latitude"]
     long = results[0]["longitude"]
 
-    # log the coordinates retrieved
-    gv.task_log.info(f"Coordinates for {city}: {lat}/{long}")
+    # log the coordinates retrieved and the place they belong to, so a wrong
+    # match (another place with the same name) is easy to spot
+    place = ", ".join(
+        results[0][key] for key in ["name", "admin1", "country"] if results[0].get(key)
+    )
+    gv.task_log.info(f"Coordinates for {city}: {lat}/{long} ({place})")
 
     city_coordinates = {"city": city, "lat": lat, "long": long}
 
@@ -115,8 +119,8 @@ def get_historical_weather_from_city_coordinates(coordinates):
 
         max_temp_per_day = pd.DataFrame(
             {
-                "time": ["Null"],
-                "temperature_2m_max": ["Null"],
+                "time": [None],
+                "temperature_2m_max": [None],
                 "city": [city],
                 "lat": [lat],
                 "long": [long],

@@ -109,10 +109,10 @@ def solution_transform_historical_weather():
 
         # select the data from one year
         try:
-            df_birthyear = df[df["time"].str.startswith(str(birthyear))]
+            df_birthyear = df[df["time"].str.startswith(str(birthyear), na=False)]
         except:
             # if my birthyear is not available, use the year 2022
-            df_birthyear = df[df["time"].str.startswith(str("2022"))]
+            df_birthyear = df[df["time"].str.startswith(str("2022"), na=False)]
 
         # group the data by city, use an apply function to find the row with the highest temperature
         output_df = (
